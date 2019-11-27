@@ -1,0 +1,19 @@
+version: "3"
+services:
+  db:
+    image: postgres:12.1
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: elon
+      POSTGRES_PASSWORD: raclette
+      POSTGRES_DB: spacex
+  spacex-backend:
+    build: ../../.
+    depends_on:
+      - db
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: staging
+      JWT_SECRET: fromage
