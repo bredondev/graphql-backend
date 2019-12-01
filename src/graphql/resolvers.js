@@ -2,13 +2,14 @@
 const { GraphQLDate, GraphQLDateTime } = require('graphql-iso-date');
 const jwt = require('jsonwebtoken');
 const moment = require('moment');
+const { AuthenticationError, UserInputError, } = require('apollo-server-koa');
 const queries = require('../db/queries');
 const { paginateResults, checkCredentials } = require('../utils/tools');
 const { TABLES, JWT_SECRET } = require('../utils/constants');
 
 function catchUnauthenticated(context) {
   if (!context.currentUser) {
-    throw new Error('Unauthenticated!');
+    throw new AuthenticationError('You must be logged in');
   }
 }
 
@@ -99,7 +100,7 @@ module.exports = {
 
       // check date
       if (moment(flight.flightInfo.departureAt).isBefore(moment())) {
-        throw new Error('Departure date must be in the future');
+        throw new UserInputError('Departure date must be in the future');
       }
 
       // check spaceCenters exist
@@ -108,12 +109,12 @@ module.exports = {
         flight.flightInfo.landingSiteId
       ]);
       if (!spaceCentersExist) {
-        throw new Error('Launching site or landing site does not exist');
+        throw new UserInputError('Launching site or landing site does not exist');
       }
 
       // check seatCount
       if (flight.flightInfo.seatCount < 1) {
-        throw new Error('Seat count must be >= 1');
+        throw new UserInputError('Seat count must be >= 1');
       }
 
       const res = await queries.addFlight(flight.flightInfo);
@@ -126,7 +127,7 @@ module.exports = {
 
       // check seatCount
       if (booking.bookingInfo.seatCount < 1) {
-        throw new Error('Seat count must be >= 1');
+        throw new UserInputError('Seat count must be >= 1');
       }
 
       const flight = await queries.selectFromTable(
@@ -136,7 +137,7 @@ module.exports = {
 
       // check date
       if (moment(flight[0].departure_at).isBefore(moment())) {
-        throw new Error('This rocket has already took off');
+        throw new UserInputError('This rocket has already took off');
       }
 
       const flightBookingsNumber =
@@ -145,7 +146,7 @@ module.exports = {
       // check if the flight is not full
       if ((Number(flightBookingsNumber) + booking.bookingInfo.seatCount)
         > flight[0].seat_count) {
-        throw new Error('There is not enough room in the flight for your booking');
+        throw new UserInputError('There is not enough room in the flight for your booking');
       }
 
       const res = await queries.addBooking(booking.bookingInfo);
@@ -155,7 +156,7 @@ module.exports = {
 
     login: (_, { username, password}) => {
       if (!checkCredentials(username, password)) {
-        throw new Error('Invalid credentials');
+        throw new AuthenticationError('Invalid credentials');
       }
 
       return (jwt.sign({

@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { AuthenticationError } = require('apollo-server-koa');
 const { JWT_SECRET } = require('./constants');
 
 function paginateResults({
@@ -39,7 +40,7 @@ function getUserFromToken(token) {
 
   // in case the user has been deleted/banned and his token is still valid
   if (!checkCredentials(decodedToken.data.username, decodedToken.data.password)) {
-    throw new Error('Wrong credentials');
+    throw new AuthenticationError('Invalid credentials');
   }
 
   return {
