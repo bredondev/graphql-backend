@@ -6,11 +6,12 @@ const knex = require('./connection');
 //   console.log( queryData );
 // });
 
-async function selectFromTable(table, filters, filtersRaw, limit) {
+async function selectFromTable(table, { filters, filtersRaw, ids, limit }) {
   const query = knex(table).select('*');
 
   if (filters) query.where(filters);
   if (filtersRaw) query.whereRaw(filtersRaw);
+  if (ids) query.whereIn('id', ids);
   if (limit) query.limit(limit);
 
   return query;

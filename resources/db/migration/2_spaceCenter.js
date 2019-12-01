@@ -9,6 +9,11 @@ exports.up = async (knex) => {
       longitude NUMERIC,
       planet_id INTEGER REFERENCES planet(id)
     );
+    CREATE INDEX  search_fields_space_center ON space_center
+    (
+      id,
+      uid
+    );
   `);
 };
 

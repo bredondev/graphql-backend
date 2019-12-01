@@ -5,6 +5,10 @@ exports.up = async (knex) => {
       name TEXT,
       code VARCHAR (3)
     );
+    CREATE INDEX  search_fields_planet ON planet
+    (
+      id
+    );
   `);
 };
 

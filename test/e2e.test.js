@@ -4,6 +4,7 @@ const gql = require('graphql-tag');
 const typeDefs = require('../src/graphql/schema');
 const resolvers = require('../src/graphql/resolvers');
 const queries = require('../src/db/queries');
+const dataLoaders= require('../src/utils/dataLoaders');
 
 const planets = [
   { id: '1', name: 'test' },
@@ -32,19 +33,19 @@ queries.addFlight = jest.fn((flightInfo) => {
 queries.selectFromTable = jest
   .fn()
   .mockImplementationOnce(() => planets)
-  .mockImplementationOnce((_, filter) => {
+  .mockImplementationOnce((_, { filters }) => {
     return spaceCenters.filter((sc) => {
-      return sc.planet_id === filter.planet_id;
+      return sc.planet_id === filters.planet_id;
     });
   })
-  .mockImplementationOnce((_, filter) => {
+  .mockImplementationOnce((_, { filters }) => {
     return spaceCenters.filter((sc) => {
-      return sc.planet_id === filter.planet_id;
+      return sc.planet_id === filters.planet_id;
     });
   })
-  .mockImplementationOnce((_, filter) => {
+  .mockImplementationOnce((_, { ids }) => {
     return spaceCenters.filter((sc) => {
-      return sc.id === filter.id;
+      return sc.id === ids[0];
     });
   });
 
@@ -79,7 +80,10 @@ const server = new ApolloServer({
       currentUser: {
         username: 'raclette',
         password: 'tartiflette',
-      }
+      },
+      dataLoaders: {
+        spaceCenter: dataLoaders.loadSpaceCenters,
+      },
     }
   ),
 });
