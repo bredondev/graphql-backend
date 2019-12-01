@@ -8,7 +8,6 @@ exports.up = async (knex) => {
     );
     CREATE INDEX  search_fields_booking ON booking
     (
-      id,
       email,
       flight_id
     );

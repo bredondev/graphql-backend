@@ -10,7 +10,6 @@ exports.up = async (knex) => {
     );
     CREATE INDEX  search_fields_flight ON flight
     (
-      id,
       ((departure_at::DATE)),
       seat_count,
       launch_site_id,
