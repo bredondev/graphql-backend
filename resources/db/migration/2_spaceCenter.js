@@ -12,7 +12,8 @@ exports.up = async (knex) => {
     CREATE INDEX  search_fields_space_center ON space_center
     (
       id,
-      uid
+      uid,
+      planet_id
     );
   `);
 };

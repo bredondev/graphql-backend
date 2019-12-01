@@ -27,7 +27,7 @@ queries.addFlight = jest.fn((flightInfo) => {
   return [{
     seat_count: flightInfo.seatCount,
     departure_at: flightInfo.departureAt,
-    launch_site: flightInfo.launchSiteId,
+    launch_site_id: flightInfo.launchSiteId,
   }];
 });
 queries.selectFromTable = jest

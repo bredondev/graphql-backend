@@ -5,16 +5,16 @@ exports.up = async (knex) => {
       code TEXT,
       departure_at TIMESTAMP,
       seat_count INTEGER,
-      launch_site INTEGER REFERENCES space_center(id),
-      landing_site INTEGER REFERENCES space_center(id)
+      launch_site_id INTEGER REFERENCES space_center(id),
+      landing_site_id INTEGER REFERENCES space_center(id)
     );
     CREATE INDEX  search_fields_flight ON flight
     (
       id,
       ((departure_at::DATE)),
       seat_count,
-      launch_site,
-      landing_site
+      launch_site_id,
+      landing_site_id
     );
   `);
 };

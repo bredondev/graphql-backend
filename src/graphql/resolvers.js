@@ -47,8 +47,8 @@ module.exports = {
         TABLES.FLIGHT,
         {
           filters: Object.assign({},
-            filters.from && { launch_site: filters.from },
-            filters.to && { landing_site: filters.to },
+            filters.from && { launch_site_id: filters.from },
+            filters.to && { landing_site_id: filters.to },
             filters.seatCount && { seat_count: filters.seatCount },
           ),
           filtersRaw: filters.departureDay
@@ -189,10 +189,10 @@ module.exports = {
 
   Flight: {
     launchSite: async (flight, filters, { dataLoaders }) => {
-      return dataLoaders.spaceCenter.load(flight.launch_site);
+      return dataLoaders.spaceCenter.load(flight.launch_site_id);
     },
     landingSite: async (flight, filters, { dataLoaders }) => {
-      return dataLoaders.spaceCenter.load(flight.landing_site);
+      return dataLoaders.spaceCenter.load(flight.landing_site_id);
     },
     departureAt: (flight) => flight.departure_at,
     seatCount: (flight) => flight.seat_count,
