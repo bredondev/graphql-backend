@@ -6,6 +6,11 @@ exports.up = async (knex) => {
       email TEXT,
       flight_id INTEGER REFERENCES flight(id)
     );
+    CREATE INDEX  search_fields_booking ON booking
+    (
+      email,
+      flight_id
+    );
   `);
 };
 

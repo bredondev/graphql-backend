@@ -6,11 +6,12 @@ const knex = require('./connection');
 //   console.log( queryData );
 // });
 
-async function selectFromTable(table, filters, filtersRaw, limit) {
+async function selectFromTable(table, { filters, filtersRaw, ids, limit }) {
   const query = knex(table).select('*');
 
   if (filters) query.where(filters);
   if (filtersRaw) query.whereRaw(filtersRaw);
+  if (ids) query.whereIn('id', ids);
   if (limit) query.limit(limit);
 
   return query;
@@ -39,8 +40,8 @@ async function addFlight(flight) {
       code: crypto.randomBytes(16).toString('hex'),
       departure_at: moment(flight.departureAt).toISOString(),
       seat_count: flight.seatCount,
-      launch_site: flight.launchSiteId,
-      landing_site: flight.landingSiteId,
+      launch_site_id: flight.launchSiteId,
+      landing_site_id: flight.landingSiteId,
     })
     .returning('*');
 }

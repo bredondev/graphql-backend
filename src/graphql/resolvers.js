@@ -2,13 +2,14 @@
 const { GraphQLDate, GraphQLDateTime } = require('graphql-iso-date');
 const jwt = require('jsonwebtoken');
 const moment = require('moment');
+const { AuthenticationError, UserInputError, } = require('apollo-server-koa');
 const queries = require('../db/queries');
 const { paginateResults, checkCredentials } = require('../utils/tools');
 const { TABLES, JWT_SECRET } = require('../utils/constants');
 
 function catchUnauthenticated(context) {
   if (!context.currentUser) {
-    throw new Error('Unauthenticated!');
+    throw new AuthenticationError('You must be logged in');
   }
 }
 
@@ -20,13 +21,13 @@ module.exports = {
     planets: async (_, filters, context) => {
       catchUnauthenticated(context);
 
-      return queries.selectFromTable(TABLES.PLANET, filters);
+      return queries.selectFromTable(TABLES.PLANET, { filters });
     },
 
     spaceCenters: async (_, { page, pageSize }, context) => {
       catchUnauthenticated(context);
 
-      let spaceCenters = await queries.selectFromTable(TABLES.SPACE_CENTER);
+      let spaceCenters = await queries.selectFromTable(TABLES.SPACE_CENTER, {});
       spaceCenters = paginateResults({ page, pageSize, results: spaceCenters });
 
       return spaceCenters;
@@ -35,7 +36,7 @@ module.exports = {
     spaceCenter: async (_, filters, context) => {
       catchUnauthenticated(context);
 
-      const res = await queries.selectFromTable(TABLES.SPACE_CENTER, filters);
+      const res = await queries.selectFromTable(TABLES.SPACE_CENTER, { filters });
 
       return res[0];
     },
@@ -45,15 +46,17 @@ module.exports = {
 
       let flights = await queries.selectFromTable(
         TABLES.FLIGHT,
-        Object.assign({},
-          filters.from && { launch_site: filters.from },
-          filters.to && { landing_site: filters.to },
-          filters.seatCount && { seat_count: filters.seatCount },
-        ),
-        // we should find a better solution for the date filtering
-        // (TO DO: check postgres timestamp type)
-        filters.departureDay
-          && `departure_at like '${moment(filters.departureDay).format('YYYY-MM-DD')}%'`
+        {
+          filters: Object.assign({},
+            filters.from && { launch_site_id: filters.from },
+            filters.to && { landing_site_id: filters.to },
+            filters.seatCount && { seat_count: filters.seatCount },
+          ),
+          filtersRaw: filters.departureDay
+            && `(departure_at::DATE) = '${
+              moment(filters.departureDay).format('YYYY-MM-DD')
+            }'`
+        }
       );
       flights = paginateResults({
         page: filters.page,
@@ -67,7 +70,7 @@ module.exports = {
     flight: async (_, filters, context) => {
       catchUnauthenticated(context);
 
-      const res = await queries.selectFromTable(TABLES.FLIGHT, filters);
+      const res = await queries.selectFromTable(TABLES.FLIGHT, { filters });
 
       return res[0];
     },
@@ -76,7 +79,7 @@ module.exports = {
       catchUnauthenticated(context);
 
       let bookings = await queries.selectFromTable(TABLES.BOOKING,
-        Object.assign({}, email && { email: email }));
+        { filters: Object.assign({}, email && { email: email })});
       bookings = paginateResults({ page, pageSize, results: bookings, });
 
       return bookings;
@@ -85,7 +88,7 @@ module.exports = {
     booking: async (_, filters, context) => {
       catchUnauthenticated(context);
 
-      const res = await queries.selectFromTable(TABLES.BOOKING, filters);
+      const res = await queries.selectFromTable(TABLES.BOOKING, { filters });
 
       return res[0];
     },
@@ -97,7 +100,7 @@ module.exports = {
 
       // check date
       if (moment(flight.flightInfo.departureAt).isBefore(moment())) {
-        throw new Error('Departure date must be in the future');
+        throw new UserInputError('Departure date must be in the future');
       }
 
       // check spaceCenters exist
@@ -106,12 +109,12 @@ module.exports = {
         flight.flightInfo.landingSiteId
       ]);
       if (!spaceCentersExist) {
-        throw new Error('Launching site or landing site does not exist');
+        throw new UserInputError('Launching site or landing site does not exist');
       }
 
       // check seatCount
       if (flight.flightInfo.seatCount < 1) {
-        throw new Error('Seat count must be >= 1');
+        throw new UserInputError('Seat count must be >= 1');
       }
 
       const res = await queries.addFlight(flight.flightInfo);
@@ -124,17 +127,17 @@ module.exports = {
 
       // check seatCount
       if (booking.bookingInfo.seatCount < 1) {
-        throw new Error('Seat count must be >= 1');
+        throw new UserInputError('Seat count must be >= 1');
       }
 
       const flight = await queries.selectFromTable(
         TABLES.FLIGHT,
-        { id: booking.bookingInfo.flightId }
+        { filters: { id: booking.bookingInfo.flightId }}
       );
 
       // check date
       if (moment(flight[0].departure_at).isBefore(moment())) {
-        throw new Error('This rocket has already took off');
+        throw new UserInputError('This rocket has already took off');
       }
 
       const flightBookingsNumber =
@@ -143,7 +146,7 @@ module.exports = {
       // check if the flight is not full
       if ((Number(flightBookingsNumber) + booking.bookingInfo.seatCount)
         > flight[0].seat_count) {
-        throw new Error('There is not enough room in the flight for your booking');
+        throw new UserInputError('There is not enough room in the flight for your booking');
       }
 
       const res = await queries.addBooking(booking.bookingInfo);
@@ -153,7 +156,7 @@ module.exports = {
 
     login: (_, { username, password}) => {
       if (!checkCredentials(username, password)) {
-        throw new Error('Invalid credentials');
+        throw new AuthenticationError('Invalid credentials');
       }
 
       return (jwt.sign({
@@ -169,9 +172,10 @@ module.exports = {
 
       const res = await queries.selectFromTable(
         TABLES.SPACE_CENTER,
-        { planet_id: planet.id },
-        undefined,
-        fixedLimit
+        {
+          filters: { planet_id: planet.id },
+          limit: fixedLimit,
+        }
       );
 
       return res;
@@ -179,29 +183,17 @@ module.exports = {
   },
 
   SpaceCenter: {
-    planet: async (spaceCenter) => {
-      const res = await queries.selectFromTable(
-        TABLES.PLANET,
-        { id: spaceCenter.planet_id }
-      );
-      return res[0];
+    planet: async (spaceCenter, filters, { dataLoaders }) => {
+      return dataLoaders.planet.load(spaceCenter.planet_id);
     }
   },
 
   Flight: {
-    launchSite: async (flight) => {
-      const res = await queries.selectFromTable(
-        TABLES.SPACE_CENTER,
-        { id: flight.launch_site }
-      );
-      return res[0];
+    launchSite: async (flight, filters, { dataLoaders }) => {
+      return dataLoaders.spaceCenter.load(flight.launch_site_id);
     },
-    landingSite: async (flight) => {
-      const res = await queries.selectFromTable(
-        TABLES.SPACE_CENTER,
-        { id: flight.landing_site }
-      );
-      return res[0];
+    landingSite: async (flight, filters, { dataLoaders }) => {
+      return dataLoaders.spaceCenter.load(flight.landing_site_id);
     },
     departureAt: (flight) => flight.departure_at,
     seatCount: (flight) => flight.seat_count,
@@ -212,12 +204,8 @@ module.exports = {
   },
 
   Booking: {
-    flight: async (booking) => {
-      const res = await queries.selectFromTable(
-        TABLES.FLIGHT,
-        { id: booking.flight_id }
-      );
-      return res[0];
+    flight: async (booking, filters, { dataLoaders }) => {
+      return dataLoaders.flight.load(booking.flight_id);
     },
     seatCount: (booking) => booking.seat_count,
   },
