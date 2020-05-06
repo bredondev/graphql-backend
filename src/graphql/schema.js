@@ -1,8 +1,11 @@
 const { gql } = require('apollo-server-koa');
 
 const typeDefs = gql`
+  directive @isAuthenticated on OBJECT | FIELD_DEFINITION
+
   scalar Date
   scalar DateTime
+
   type Planet {
     id: ID!
     name: String!
@@ -51,11 +54,11 @@ const typeDefs = gql`
   }
 
   type Query {
-    planets: [Planet]
+    planets: [Planet] @isAuthenticated
 
-    spaceCenters(page: Int = 1, pageSize: Int = 10): [SpaceCenter]
+    spaceCenters(page: Int = 1, pageSize: Int = 10): [SpaceCenter] @isAuthenticated
 
-    spaceCenter(id: ID, uid: String): SpaceCenter
+    spaceCenter(id: ID, uid: String): SpaceCenter @isAuthenticated
 
     flights(
       from: ID
@@ -64,18 +67,18 @@ const typeDefs = gql`
       departureDay: Date
       page: Int = 1
       pageSize: Int = 10
-    ): [Flight]
+    ): [Flight] @isAuthenticated
 
-    flight(id: ID!): Flight
+    flight(id: ID!): Flight @isAuthenticated
 
-    bookings(email: String, page: Int = 1, pageSize: Int = 10): [Booking]
+    bookings(email: String, page: Int = 1, pageSize: Int = 10): [Booking] @isAuthenticated
 
-    booking(id: ID!): Booking
+    booking(id: ID!): Booking @isAuthenticated
   }
 
   type Mutation {
-    scheduleFlight(flightInfo: FlightInput!): Flight
-    bookFlight(bookingInfo: BookingInput!): Booking
+    scheduleFlight(flightInfo: FlightInput!): Flight @isAuthenticated
+    bookFlight(bookingInfo: BookingInput!): Booking @isAuthenticated
     login(username: String!, password: String!): String
   }
 `;

@@ -21,7 +21,7 @@ And the service will be exposed on http://localhost:3000/graphql
 
 _NB: `db` is important here for the docker-compose command (it will only launch the db)._
 
-_NB2: running `seed` twice will fail due to db constraint (despite the `0_reset.js` script...). (TO FIX)_
+_NB2: running `seed` twice will fail due to db constraint._
 
 ---
 

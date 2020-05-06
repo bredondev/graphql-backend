@@ -6,15 +6,19 @@ const knex = require('./connection');
 //   console.log( queryData );
 // });
 
-async function selectFromTable(table, { filters, filtersRaw, ids, limit }) {
-  const query = knex(table).select('*');
+async function selectFromTable(table, { filters, filtersRaw, ids, page, pageSize, limit }) {
+  const wantedPage = (page < 1 ? 0 : page - 1);
+  let wantedPageSize = (pageSize < 1 ? 1 : pageSize);
+  wantedPageSize = (wantedPageSize > 100 ? 100 : wantedPageSize)
+    || (limit < 1 ? 5 : limit > 10 ? 10 : limit);
 
-  if (filters) query.where(filters);
-  if (filtersRaw) query.whereRaw(filtersRaw);
-  if (ids) query.whereIn('id', ids);
-  if (limit) query.limit(limit);
-
-  return query;
+  return knex(table).select('*').modify((queryBuilder) => {
+    if (filters) queryBuilder.where(filters);
+    if (filtersRaw) queryBuilder.whereRaw(filtersRaw);
+    if (ids) queryBuilder.whereIn('id', ids);
+    if (wantedPage && wantedPageSize) queryBuilder.offset(wantedPage * wantedPageSize);
+    if (wantedPageSize) queryBuilder.limit(wantedPageSize);
+  });
 }
 
 async function checkSpaceCentersExist(spaceCentersId) {
