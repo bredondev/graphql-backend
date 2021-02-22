@@ -2,36 +2,39 @@
   "name": "graphql-backend",
   "version": "0.0.1",
   "description": "",
+  "author": "",
+  "license": "ISC",
   "main": "./src/server.js",
   "scripts": {
     "test": "NODE_ENV=development jest --verbose",
     "lint": "eslint .",
-    "migrate": "knex migrate:latest",
-    "seed": "knex seed:run",
+    "migrate": "knex --knexfile=./resources/db/knexfile.js migrate:latest",
+    "seed": "knex --knexfile=./resources/db/knexfile.js seed:run",
     "start": "NODE_ENV=development JWT_SECRET=fromage node src/server.js"
   },
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "@koa/cors": "^3.0.0",
-    "apollo-server-koa": "^2.13.0",
+    "@koa/cors": "^3.1.0",
+    "apollo-server-koa": "^2.21.0",
     "dataloader": "^2.0.0",
-    "graphql": "^15.0.0",
-    "graphql-auth-directives": "^2.2.0",
+    "graphql": "^15.5.0",
+    "graphql-auth-directives": "^2.2.2",
     "graphql-iso-date": "^3.6.1",
-    "graphql-tag": "^2.10.3",
+    "graphql-tag": "^2.11.0",
     "jsonwebtoken": "^8.5.1",
-    "knex": "^0.21.1",
-    "koa": "^2.11.0",
-    "koa-helmet": "^5.2.0",
-    "lodash": "^4.17.15",
-    "moment": "^2.25.3",
-    "pg": "^8.0.3"
+    "knex": "^0.21.18",
+    "koa": "^2.13.1",
+    "koa-helmet": "^6.0.0",
+    "lodash": "^4.17.21",
+    "moment": "^2.29.1",
+    "pg": "^8.5.1"
   },
   "devDependencies": {
-    "apollo-server-testing": "^2.13.0",
-    "eslint": "^6.8.0",
-    "eslint-plugin-jest": "^23.9.0",
-    "jest": "^26.0.1"
+    "apollo-server-testing": "^2.21.0",
+    "eslint": "^7.20.0",
+    "eslint-plugin-jest": "^24.1.5",
+    "jest": "^26.6.3"
+  },
+  "jest": {
+    "testEnvironment": "node"
   }
 }

@@ -10,10 +10,10 @@ module.exports = {
       port: '5432',
     },
     migrations: {
-      directory: './resources/db/migration',
+      directory: './migration',
     },
     seeds: {
-      directory: './resources/db/seeds',
+      directory: './seeds',
     },
   },
   staging: {
@@ -26,10 +26,10 @@ module.exports = {
       port: '5432',
     },
     migrations: {
-      directory: './resources/db/migration',
+      directory: './migration',
     },
     seeds: {
-      directory: './resources/db/seeds',
+      directory: './seeds',
     },
   }
 };
